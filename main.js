@@ -1,9 +1,6 @@
-const baseURL = "https://swapi.co/api/";
-
-function getData(type, cb){
+function getData(url, cb){
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", baseURL + type + "/"); //GET retrieves data, post sends data; second url is argument we want to retrieve
-    xhr.send(); //send request
+
     
     
     xhr.onreadystatechange = function() { //xhr object maintains an internal state as it's completing various parts of our request operation
@@ -11,10 +8,9 @@ function getData(type, cb){
             cb(JSON.parse(this.responseText));
         }
     };
-}
-
-function printDataToConsole(data){
-    console.log(data);
+    
+    xhr.open("GET", url); //GET retrieves data, post sends data; second url is argument we want to retrieve
+    xhr.send(); //send request
 }
 
 function getTableHeaders(obj){
@@ -28,12 +24,27 @@ function getTableHeaders(obj){
     
 }
 
-function writeToDocument(type){
+function generatePaginationButtons(next, prev){
+    if (next && prev){
+        return `<button onclick="writeToDocument('${prev}')">Previous</button>
+                <button onclick="writeToDocument('${next}')">Next</button>`;
+    } else if (next && !prev) {
+        return `<button onclick="writeToDocument('${next}')">Next</button>`;
+    } else if (!next && prev) {
+        return `<button onclick="writeToDocument('${prev}')">Previous</button>`;
+    }
+    
+}
+
+function writeToDocument(url){
     var tableRows = [];
     var el = document.getElementById("data");
     
-    el.innerHTML = "";
-    getData(type, function(data){
+    getData(url, function(data){
+        var pagination = "";
+        if(data.next || data.previous){
+            pagination = generatePaginationButtons(data.next, data.previous)
+        }
         data = data.results;
         var tableHeaders = getTableHeaders(data[0]);
         
@@ -48,6 +59,6 @@ function writeToDocument(type){
             tableRows.push(`<tr>${dataRow}</tr>`);
         });
         
-        el.innerHTML = `<table>${tableHeaders}${tableRows}</table>`;
+        el.innerHTML = `<table>${tableHeaders}${tableRows}</table>${pagination}`;
     });
 }
